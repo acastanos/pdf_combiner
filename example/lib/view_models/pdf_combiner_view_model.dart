@@ -164,10 +164,8 @@ class PdfCombinerViewModel {
 
   /// Function to get the appropriate directory for saving the output file
   Future<Directory?> _getOutputDirectory() async {
-    if (PlatformDetail.isIOS || PlatformDetail.isDesktop) {
-      return await getApplicationDocumentsDirectory(); // For iOS & Desktop, return the documents directory
-    } else if (PlatformDetail.isAndroid) {
-      return await getDownloadsDirectory(); // For Android, return the Downloads directory
+    if (PlatformDetail.isMobile || PlatformDetail.isDesktop) {
+      return await getApplicationDocumentsDirectory(); // For Mobile & Desktop, return the documents directory
     } else if (PlatformDetail.isWeb) {
       return null;
     } else {
@@ -179,8 +177,7 @@ class PdfCombinerViewModel {
   /// Function to copy the output file path to the clipboard
   Future<void> copyOutputToClipboard(int index) async {
     if (outputFiles.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(
-          text: outputFiles[index])); // Copy output path to clipboard
+      await Clipboard.setData(ClipboardData(text: outputFiles[index]));
     }
   }
 

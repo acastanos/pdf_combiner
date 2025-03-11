@@ -53,7 +53,7 @@ class MockPdfCombinerPlatformWithError
   /// [outputPath] The path where the images should be saved.
   /// [maxWidth] The maximum width for resizing the images (optional).
   /// [maxHeight] The maximum height for resizing the images (optional).
-  /// [createOneImage] Whether to create a single image from the entire PDF (optional).
+  /// [imageFromPdfConfigCreateOneImage] Whether to create a single image from the entire PDF (optional).
   @override
   Future<List<String>?> createImageFromPDF({
     required String inputPath,

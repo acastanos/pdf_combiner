@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_combiner_example/utils/uint8list_extension.dart';
+import 'package:pdf_combiner_example/views/pdf_config_screen.dart';
 import 'package:pdf_combiner_example/views/widgets/file_type_icon.dart';
 
 import '../view_models/pdf_combiner_view_model.dart';
@@ -29,6 +30,11 @@ class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
             onPressed: _restart,
             icon: const Icon(Icons.restart_alt),
             tooltip: "Restart app",
+          ),
+          IconButton(
+            onPressed: _navigateToPdfConfigScreen,
+            icon: const Icon(Icons.settings),
+            tooltip: "Configure app",
           ),
           IconButton(
             onPressed: _pickFiles,
@@ -294,6 +300,13 @@ class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
       changeLoading(false);
       _showSnackbarSafely(e.toString());
     }
+  }
+
+  Future<void> _navigateToPdfConfigScreen() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PdfConfigScreen()),
+    );
   }
 
   Future<void> _copyOutputToClipboard(int index) async {
