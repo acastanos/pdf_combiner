@@ -50,7 +50,7 @@ class PdfCombiner {
   /// - Returns an error if any input file is neither a PDF nor an image.
   /// - Returns an error if the image-to-PDF conversion fails.
   /// - Returns an error if the merging process fails.
-  static Future<GeneratePdfFromDocumentsResponse> generatePDFFromDocuments({
+  Future<GeneratePdfFromDocumentsResponse> generatePDFFromDocuments({
     required List<String> inputPaths,
     required String outputPath,
     PdfCombinerDelegate? delegate,
@@ -86,7 +86,7 @@ class PdfCombiner {
           );
         } else {
           if (isImage) {
-            final response = await PdfCombiner.createPDFFromMultipleImages(
+            final response = await createPDFFromMultipleImages(
                 inputPaths: [path], outputPath: "$dirname/document_$i.pdf");
             if (response.status == PdfCombinerStatus.success) {
               mutablePaths[i] = response.outputPath;
@@ -100,7 +100,7 @@ class PdfCombiner {
           }
         }
       }
-      final response = await PdfCombiner.mergeMultiplePDFs(
+      final response = await mergeMultiplePDFs(
         inputPaths: mutablePaths,
         outputPath: outputPath,
       );
@@ -133,7 +133,7 @@ class PdfCombiner {
   ///
   /// Returns:
   /// - A `Future<MergeMultiplePDFResponse?>` representing the result of the operation (either the success message or an error message).
-  static Future<MergeMultiplePDFResponse> mergeMultiplePDFs({
+  Future<MergeMultiplePDFResponse> mergeMultiplePDFs({
     required List<String> inputPaths,
     required String outputPath,
     PdfCombinerDelegate? delegate,
@@ -203,7 +203,7 @@ class PdfCombiner {
   ///
   /// Returns:
   /// - A `Future<PdfFromMultipleImageResponse?>` representing the result of the operation (either the success message or an error message).
-  static Future<PdfFromMultipleImageResponse> createPDFFromMultipleImages({
+  Future<PdfFromMultipleImageResponse> createPDFFromMultipleImages({
     required List<String> inputPaths,
     required String outputPath,
     PdfFromMultipleImageConfig config = const PdfFromMultipleImageConfig(),
@@ -291,7 +291,7 @@ class PdfCombiner {
   ///
   /// Returns:
   /// - A `Future<ImageFromPDFResponse?>` representing the result of the operation (either the success message or an error message).
-  static Future<ImageFromPDFResponse> createImageFromPDF({
+  Future<ImageFromPDFResponse> createImageFromPDF({
     required String inputPath,
     required String outputDirPath,
     ImageFromPdfConfig config = const ImageFromPdfConfig(),

@@ -8,6 +8,7 @@ import 'mocks/mock_pdf_combiner_platform_with_error.dart';
 import 'mocks/mock_pdf_combiner_platform_with_exception.dart';
 
 void main() {
+  final pdfCombiner = PdfCombiner();
   group('PdfCombiner  Create PDF From Multiple Images Unit Tests', () {
     PdfCombiner.isMock = true;
     // Test for error handling when file not exist in the createPDFFromMultipleImages method.
@@ -19,7 +20,7 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await PdfCombiner.createPDFFromMultipleImages(
+      final result = await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [],
         outputPath: 'output/path.pdf',
       );
@@ -39,7 +40,7 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await PdfCombiner.createPDFFromMultipleImages(
+      final result = await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: ['path1.jpg', 'path2.jpg'],
         outputPath: 'output/path.pdf',
       );
@@ -60,7 +61,7 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await PdfCombiner.createPDFFromMultipleImages(
+      final result = await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: ['assets/document_1.pdf', 'path2.jpg'],
         outputPath: 'output/path.pdf',
       );
@@ -82,7 +83,7 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await PdfCombiner.createPDFFromMultipleImages(
+      final result = await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [
           'example/assets/image_1.jpeg',
           'example/assets/image_2.png'
@@ -106,7 +107,7 @@ void main() {
       final outputPath = 'output/path/pdf_output.pdf';
 
       // Call the method and check the response.
-      final result = await PdfCombiner.createPDFFromMultipleImages(
+      final result = await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [
           'example/assets/image_1.jpeg',
           'example/assets/image_2.png'
@@ -133,7 +134,7 @@ void main() {
     final outputPath = 'output/path/pdf_output.jpeg';
 
     // Call the method and check the response.
-    final result = await PdfCombiner.createPDFFromMultipleImages(
+    final result = await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: outputPath,
     );
@@ -156,7 +157,7 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await PdfCombiner.createPDFFromMultipleImages(
+    final result = await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
     );
@@ -178,7 +179,7 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await PdfCombiner.createPDFFromMultipleImages(
+    final result = await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
     );
@@ -200,7 +201,7 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await PdfCombiner.createPDFFromMultipleImages(
+    final result = await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
     );
