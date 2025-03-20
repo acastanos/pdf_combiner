@@ -5,11 +5,7 @@ import 'package:pdf_combiner/isolates/images_from_pdf_isolate.dart';
 import 'package:pdf_combiner/models/pdf_from_multiple_image_config.dart';
 import 'package:pdf_combiner/pdf_combiner_delegate.dart';
 import 'package:pdf_combiner/responses/generate_pdf_from_documents_response.dart';
-import 'package:pdf_combiner/responses/image_from_pdf_response.dart';
-import 'package:pdf_combiner/responses/merge_multiple_pdf_response.dart';
 import 'package:pdf_combiner/responses/pdf_combiner_messages.dart';
-import 'package:pdf_combiner/responses/pdf_combiner_status.dart';
-import 'package:pdf_combiner/responses/pdf_from_multiple_image_response.dart';
 import 'package:pdf_combiner/utils/document_utils.dart';
 
 import 'isolates/merge_pdfs_isolate.dart';
@@ -50,21 +46,17 @@ class PdfCombiner {
   /// - Returns an error if any input file is neither a PDF nor an image.
   /// - Returns an error if the image-to-PDF conversion fails.
   /// - Returns an error if the merging process fails.
-  Future<GeneratePdfFromDocumentsResponse> generatePDFFromDocuments({
+  Future<void> generatePDFFromDocuments({
     required List<String> inputPaths,
     required String outputPath,
-    PdfCombinerDelegate? delegate,
+    required PdfCombinerDelegate delegate,
   }) async {
     if (inputPaths.isEmpty) {
-      return GeneratePdfFromDocumentsResponse(
-        status: PdfCombinerStatus.error,
-        message: PdfCombinerMessages.emptyParameterMessage("inputPaths"),
-      );
+      delegate.onError?.call(
+          Exception(PdfCombinerMessages.emptyParameterMessage("inputPaths")));
     } else if (outputPath.trim().isEmpty) {
-      return GeneratePdfFromDocumentsResponse(
-        status: PdfCombinerStatus.error,
-        message: PdfCombinerMessages.emptyParameterMessage("outputPath"),
-      );
+      delegate.onError?.call(
+          Exception(PdfCombinerMessages.emptyParameterMessage("outputPath")));
     } else {
       final List<String> mutablePaths = List.from(inputPaths);
       String dirname = path.dirname(outputPath);
@@ -74,48 +66,31 @@ class PdfCombiner {
         final isImage = await DocumentUtils.isImage(path);
         final outputPathIsPDF = DocumentUtils.hasPDFExtension(outputPath);
         if (!outputPathIsPDF) {
-          return GeneratePdfFromDocumentsResponse(
-            status: PdfCombinerStatus.error,
-            message:
-                PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath),
-          );
+          delegate.onError?.call(Exception(
+              PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath)));
         } else if (!isPDF && !isImage) {
-          return GeneratePdfFromDocumentsResponse(
-            status: PdfCombinerStatus.error,
-            message: PdfCombinerMessages.errorMessageMixed(path),
-          );
+          delegate.onError
+              ?.call(Exception(PdfCombinerMessages.errorMessageMixed(path)));
         } else {
           if (isImage) {
-            final response = await createPDFFromMultipleImages(
-                inputPaths: [path], outputPath: "$dirname/document_$i.pdf");
-            if (response.status == PdfCombinerStatus.success) {
-              mutablePaths[i] = response.outputPath;
-            } else {
-              return GeneratePdfFromDocumentsResponse(
-                status: PdfCombinerStatus.error,
-                message:
-                    response.message ?? "Error creating PDF from image: $path",
-              );
-            }
+            final customDelegate = PdfCombinerDelegate(
+                onSuccess: (paths) {
+                  mutablePaths[i] = paths.first;
+                },
+                onError: delegate.onError,
+                onProgress: delegate.onProgress);
+            await createPDFFromMultipleImages(
+                inputPaths: [path],
+                outputPath: "$dirname/document_$i.pdf",
+                delegate: customDelegate);
           }
         }
       }
-      final response = await mergeMultiplePDFs(
+      await mergeMultiplePDFs(
         inputPaths: mutablePaths,
         outputPath: outputPath,
+        delegate: delegate,
       );
-      if (response.status == PdfCombinerStatus.success) {
-        return GeneratePdfFromDocumentsResponse(
-          status: PdfCombinerStatus.success,
-          message: PdfCombinerMessages.successMessage,
-          outputPath: response.outputPath,
-        );
-      } else {
-        return GeneratePdfFromDocumentsResponse(
-          status: PdfCombinerStatus.error,
-          message: response.message,
-        );
-      }
     }
   }
 
@@ -132,58 +107,48 @@ class PdfCombiner {
   /// - `outputPath`: A string representing the directory where the combined PDF should be saved.
   ///
   /// Returns:
-  /// - A `Future<MergeMultiplePDFResponse?>` representing the result of the operation (either the success message or an error message).
-  Future<MergeMultiplePDFResponse> mergeMultiplePDFs({
+  /// - A `Future<void>` representing the result of the operation (either the success message or an error message).
+  Future<void> mergeMultiplePDFs({
     required List<String> inputPaths,
     required String outputPath,
-    PdfCombinerDelegate? delegate,
+    required PdfCombinerDelegate delegate,
   }) async {
     if (inputPaths.isEmpty) {
-      return MergeMultiplePDFResponse(
-          status: PdfCombinerStatus.error,
-          message: PdfCombinerMessages.emptyParameterMessage("inputPaths"));
+      delegate.onError?.call(
+          Exception(PdfCombinerMessages.emptyParameterMessage("inputPaths")));
     } else {
       try {
-        bool success = true;
+        bool isPdf = true;
         String path = "";
         int i = 0;
 
-        while (i < inputPaths.length && success) {
-          success = await DocumentUtils.isPDF(inputPaths[i]);
+        while (i < inputPaths.length && isPdf) {
+          isPdf = await DocumentUtils.isPDF(inputPaths[i]);
           path = inputPaths[i];
           i++;
         }
 
         final outputPathIsPDF = DocumentUtils.hasPDFExtension(outputPath);
         if (!outputPathIsPDF) {
-          return MergeMultiplePDFResponse(
-            status: PdfCombinerStatus.error,
-            message:
-                PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath),
-          );
-        } else if (!success) {
-          return MergeMultiplePDFResponse(
-              status: PdfCombinerStatus.error,
-              message: PdfCombinerMessages.errorMessagePDF(path));
+          delegate.onError?.call(Exception(
+              PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath)));
+        } else if (!isPdf) {
+          delegate.onError
+              ?.call(Exception(PdfCombinerMessages.errorMessagePDF(path)));
         } else {
           final String? response = await MergePdfsIsolate.mergeMultiplePDFs(
               inputPaths: inputPaths, outputPath: outputPath);
 
           if (response != null &&
               (response == outputPath || response.startsWith("blob:http"))) {
-            return MergeMultiplePDFResponse(
-                status: PdfCombinerStatus.success,
-                message: PdfCombinerMessages.successMessage,
-                outputPath: response);
+            delegate.onSuccess?.call([response]);
           } else {
-            return MergeMultiplePDFResponse(
-                status: PdfCombinerStatus.error,
-                message: response ?? PdfCombinerMessages.errorMessage);
+            delegate.onError
+                ?.call(Exception(response ?? PdfCombinerMessages.errorMessage));
           }
         }
       } catch (e) {
-        return MergeMultiplePDFResponse(
-            status: PdfCombinerStatus.error, message: e.toString());
+        delegate.onError?.call(e is Exception ? e : Exception(e.toString()));
       }
     }
   }
@@ -202,24 +167,20 @@ class PdfCombiner {
   ///   - `keepAspectRatio`: Indicates whether to maintain the aspect ratio of the images (default is `true`).
   ///
   /// Returns:
-  /// - A `Future<PdfFromMultipleImageResponse?>` representing the result of the operation (either the success message or an error message).
-  Future<PdfFromMultipleImageResponse> createPDFFromMultipleImages({
+  /// - A `Future<void>` representing the result of the operation (either the success message or an error message).
+  Future<void> createPDFFromMultipleImages({
     required List<String> inputPaths,
     required String outputPath,
+    required PdfCombinerDelegate delegate,
     PdfFromMultipleImageConfig config = const PdfFromMultipleImageConfig(),
-    PdfCombinerDelegate? delegate,
   }) async {
     final outputPathIsPDF = DocumentUtils.hasPDFExtension(outputPath);
     if (!outputPathIsPDF) {
-      return PdfFromMultipleImageResponse(
-        status: PdfCombinerStatus.error,
-        message: PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath),
-      );
+      delegate.onError?.call(Exception(
+          PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath)));
     } else if (inputPaths.isEmpty) {
-      return PdfFromMultipleImageResponse(
-        status: PdfCombinerStatus.error,
-        message: PdfCombinerMessages.emptyParameterMessage("inputPaths"),
-      );
+      delegate.onError?.call(
+          Exception(PdfCombinerMessages.emptyParameterMessage("inputPaths")));
     } else {
       try {
         bool success = true;
@@ -233,10 +194,8 @@ class PdfCombiner {
         }
 
         if (!success) {
-          return PdfFromMultipleImageResponse(
-            status: PdfCombinerStatus.error,
-            message: PdfCombinerMessages.errorMessageImage(path),
-          );
+          delegate.onError
+              ?.call(Exception(PdfCombinerMessages.errorMessageImage(path)));
         } else {
           final String? response =
               await PdfFromMultipleImagesIsolate.createPDFFromMultipleImages(
@@ -247,23 +206,14 @@ class PdfCombiner {
 
           if (response != null &&
               (response == outputPath || response.startsWith("blob:http"))) {
-            return PdfFromMultipleImageResponse(
-              status: PdfCombinerStatus.success,
-              message: PdfCombinerMessages.successMessage,
-              outputPath: response,
-            );
+            delegate.onSuccess?.call([response]);
           } else {
-            return PdfFromMultipleImageResponse(
-              status: PdfCombinerStatus.error,
-              message: response ?? PdfCombinerMessages.errorMessage,
-            );
+            delegate.onError
+                ?.call(Exception(response ?? PdfCombinerMessages.errorMessage));
           }
         }
       } catch (e) {
-        return PdfFromMultipleImageResponse(
-          status: PdfCombinerStatus.error,
-          message: e.toString(),
-        );
+        delegate.onError?.call(e is Exception ? e : Exception(e.toString()));
       }
     }
   }
@@ -290,26 +240,23 @@ class PdfCombiner {
   ///   - `createOneImage`: Indicates whether to create a single image or separate images for each page (default is `true`).
   ///
   /// Returns:
-  /// - A `Future<ImageFromPDFResponse?>` representing the result of the operation (either the success message or an error message).
-  Future<ImageFromPDFResponse> createImageFromPDF({
+  /// - A `Future<void>` representing the result of the operation (either the success message or an error message).
+  Future<void> createImageFromPDF({
     required String inputPath,
     required String outputDirPath,
+    required PdfCombinerDelegate delegate,
     ImageFromPdfConfig config = const ImageFromPdfConfig(),
-    PdfCombinerDelegate? delegate,
   }) async {
     if (inputPath.trim().isEmpty) {
-      return ImageFromPDFResponse(
-          status: PdfCombinerStatus.error,
-          message: PdfCombinerMessages.emptyParameterMessage("inputPath"));
+      delegate.onError?.call(
+          Exception(PdfCombinerMessages.emptyParameterMessage("inputPath")));
     } else {
       try {
         bool success = await DocumentUtils.isPDF(inputPath);
 
         if (!success) {
-          return ImageFromPDFResponse(
-            status: PdfCombinerStatus.error,
-            message: PdfCombinerMessages.errorMessagePDF(inputPath),
-          );
+          delegate.onError?.call(
+              Exception(PdfCombinerMessages.errorMessagePDF("inputPath")));
         } else {
           final response = await ImagesFromPdfIsolate.createImageFromPDF(
               inputPath: inputPath,
@@ -317,28 +264,13 @@ class PdfCombiner {
               config: config);
 
           if (response != null && response.isNotEmpty) {
-            if (response.first.contains(outputDirPath) ||
-                response.first.startsWith("blob:http")) {
-              return ImageFromPDFResponse(
-                status: PdfCombinerStatus.success,
-                outputPaths: response,
-              );
-            } else {
-              return ImageFromPDFResponse(
-                status: PdfCombinerStatus.error,
-                message: response.first,
-              );
-            }
+            delegate.onSuccess?.call(response);
           } else {
-            return ImageFromPDFResponse(
-              status: PdfCombinerStatus.error,
-              message: PdfCombinerMessages.errorMessage,
-            );
+            delegate.onError?.call(Exception(PdfCombinerMessages.errorMessage));
           }
         }
       } catch (e) {
-        return ImageFromPDFResponse(
-            status: PdfCombinerStatus.error, message: e.toString());
+        delegate.onError?.call(e is Exception ? e : Exception(e.toString()));
       }
     }
   }

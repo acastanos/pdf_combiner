@@ -18,9 +18,8 @@ class PdfCombinerScreen extends StatefulWidget {
 
 class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
   final PdfCombinerViewModel _viewModel = PdfCombinerViewModel();
-  bool _isLoading = false;
   double _progress = 0.0;
-  PdfCombinerDelegate? delegate;
+  late PdfCombinerDelegate delegate;
 
   @override
   void initState() {
@@ -33,8 +32,17 @@ class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
       setState(() {
         _progress = updatedValue;
       });
+    }, onError: (error) {
+      _showSnackbarSafely(error.toString());
+    }, onSuccess: (paths) {
+      setState(() {
+        _viewModel.addOutputFiles(paths);
+      });
+      _showSnackbarSafely('File/s generated successfully: $paths');
     });
   }
+
+  bool isLoading() => _progress != 0.0 && _progress != 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +63,7 @@ class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
         ],
       ),
       body: SafeArea(
-        child: _isLoading
+        child: isLoading()
             ? Center(
                 child: CircularProgressIndicator(
                   value: _progress,
@@ -255,66 +263,26 @@ class _PdfCombinerScreenState extends State<PdfCombinerScreen> {
   void _restart() {
     _viewModel.restart();
     setState(() {
-      changeLoading(false);
+      _progress = 0.0;
     });
     _showSnackbarSafely('App restarted!');
   }
 
   // Function to combine selected PDF files into a single output file
   Future<void> _combinePdfs() async {
-    try {
-      changeLoading(true);
-      await _viewModel.combinePdfs(delegate);
-      changeLoading(false);
-      _showSnackbarSafely(
-          'PDFs combined successfully: ${_viewModel.outputFiles.first}');
-    } catch (e) {
-      changeLoading(false);
-      _showSnackbarSafely(e.toString());
-    }
+    await _viewModel.combinePdfs(delegate);
   }
 
-  void changeLoading(bool isLoading) => setState(() {
-        _isLoading = isLoading;
-      });
-
   Future<void> _createPdfFromMix() async {
-    try {
-      changeLoading(true);
-      await _viewModel.createPDFFromDocuments(delegate);
-      changeLoading(false);
-      _showSnackbarSafely(
-          'PDF created successfully: ${_viewModel.outputFiles.first}');
-    } catch (e) {
-      changeLoading(false);
-      _showSnackbarSafely(e.toString());
-    }
+    await _viewModel.createPDFFromDocuments(delegate);
   }
 
   Future<void> _createPdfFromImages() async {
-    try {
-      changeLoading(true);
-      await _viewModel.createPDFFromImages(delegate);
-      changeLoading(false);
-      _showSnackbarSafely(
-          'PDF created successfully: ${_viewModel.outputFiles.first}');
-    } catch (e) {
-      changeLoading(false);
-      _showSnackbarSafely(e.toString());
-    }
+    await _viewModel.createPDFFromImages(delegate);
   }
 
   Future<void> _createImagesFromPDF() async {
-    try {
-      changeLoading(true);
-      await _viewModel.createImagesFromPDF(delegate);
-      changeLoading(false);
-      _showSnackbarSafely(
-          'Images created successfully: ${_viewModel.outputFiles}');
-    } catch (e) {
-      changeLoading(false);
-      _showSnackbarSafely(e.toString());
-    }
+    await _viewModel.createImagesFromPDF(delegate);
   }
 
   Future<void> _copyOutputToClipboard(int index) async {
