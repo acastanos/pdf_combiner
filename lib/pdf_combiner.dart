@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:path/path.dart' as path;
 import 'package:pdf_combiner/isolates/images_from_pdf_isolate.dart';
 import 'package:pdf_combiner/models/pdf_from_multiple_image_config.dart';
+import 'package:pdf_combiner/pdf_combiner_delegate.dart';
 import 'package:pdf_combiner/responses/generate_pdf_from_documents_response.dart';
 import 'package:pdf_combiner/responses/image_from_pdf_response.dart';
 import 'package:pdf_combiner/responses/merge_multiple_pdf_response.dart';
@@ -52,6 +53,7 @@ class PdfCombiner {
   static Future<GeneratePdfFromDocumentsResponse> generatePDFFromDocuments({
     required List<String> inputPaths,
     required String outputPath,
+    PdfCombinerDelegate? delegate,
   }) async {
     if (inputPaths.isEmpty) {
       return GeneratePdfFromDocumentsResponse(
@@ -131,8 +133,11 @@ class PdfCombiner {
   ///
   /// Returns:
   /// - A `Future<MergeMultiplePDFResponse?>` representing the result of the operation (either the success message or an error message).
-  static Future<MergeMultiplePDFResponse> mergeMultiplePDFs(
-      {required List<String> inputPaths, required String outputPath}) async {
+  static Future<MergeMultiplePDFResponse> mergeMultiplePDFs({
+    required List<String> inputPaths,
+    required String outputPath,
+    PdfCombinerDelegate? delegate,
+  }) async {
     if (inputPaths.isEmpty) {
       return MergeMultiplePDFResponse(
           status: PdfCombinerStatus.error,
@@ -202,6 +207,7 @@ class PdfCombiner {
     required List<String> inputPaths,
     required String outputPath,
     PdfFromMultipleImageConfig config = const PdfFromMultipleImageConfig(),
+    PdfCombinerDelegate? delegate,
   }) async {
     final outputPathIsPDF = DocumentUtils.hasPDFExtension(outputPath);
     if (!outputPathIsPDF) {
@@ -285,10 +291,12 @@ class PdfCombiner {
   ///
   /// Returns:
   /// - A `Future<ImageFromPDFResponse?>` representing the result of the operation (either the success message or an error message).
-  static Future<ImageFromPDFResponse> createImageFromPDF(
-      {required String inputPath,
-      required String outputDirPath,
-      ImageFromPdfConfig config = const ImageFromPdfConfig()}) async {
+  static Future<ImageFromPDFResponse> createImageFromPDF({
+    required String inputPath,
+    required String outputDirPath,
+    ImageFromPdfConfig config = const ImageFromPdfConfig(),
+    PdfCombinerDelegate? delegate,
+  }) async {
     if (inputPath.trim().isEmpty) {
       return ImageFromPDFResponse(
           status: PdfCombinerStatus.error,

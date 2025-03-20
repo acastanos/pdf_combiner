@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf_combiner/pdf_combiner.dart';
+import 'package:pdf_combiner/pdf_combiner_delegate.dart';
 import 'package:pdf_combiner/responses/pdf_combiner_status.dart';
 import 'package:platform_detail/platform_detail.dart';
 
@@ -55,7 +56,7 @@ class PdfCombinerViewModel {
   }
 
   /// Function to combine selected PDF files into a single output file
-  Future<void> combinePdfs() async {
+  Future<void> combinePdfs(PdfCombinerDelegate? delegate) async {
     if (selectedFiles.length < 2) {
       throw Exception('You need to select more than one document.');
     }
@@ -69,6 +70,7 @@ class PdfCombinerViewModel {
       final response = await PdfCombiner.mergeMultiplePDFs(
         inputPaths: selectedFiles,
         outputPath: outputFilePath,
+        delegate: delegate,
       ); // Combine the PDFs
 
       if (response.status == PdfCombinerStatus.success) {
@@ -82,7 +84,7 @@ class PdfCombinerViewModel {
   }
 
   /// Function to create a PDF file from a list of images
-  Future<void> createPDFFromImages() async {
+  Future<void> createPDFFromImages(PdfCombinerDelegate? delegate) async {
     if (selectedFiles.isEmpty) return; // If no files are selected, do nothing
     String outputFilePath = "combined_output.pdf";
     try {
@@ -91,6 +93,7 @@ class PdfCombinerViewModel {
       final response = await PdfCombiner.createPDFFromMultipleImages(
         inputPaths: selectedFiles,
         outputPath: outputFilePath,
+        delegate: delegate,
       );
 
       switch (response.status) {
@@ -105,7 +108,7 @@ class PdfCombinerViewModel {
   }
 
   /// Function to create a PDF file from a list of documents
-  Future<void> createPDFFromDocuments() async {
+  Future<void> createPDFFromDocuments(PdfCombinerDelegate? delegate) async {
     if (selectedFiles.isEmpty) return; // If no files are selected, do nothing
     try {
       final directory = await _getOutputDirectory();
@@ -113,6 +116,7 @@ class PdfCombinerViewModel {
       final response = await PdfCombiner.generatePDFFromDocuments(
         inputPaths: selectedFiles,
         outputPath: outputFilePath,
+        delegate: delegate,
       );
 
       switch (response.status) {
@@ -127,7 +131,7 @@ class PdfCombinerViewModel {
   }
 
   /// Function to create a PDF file from a list of images
-  Future<void> createImagesFromPDF() async {
+  Future<void> createImagesFromPDF(PdfCombinerDelegate? delegate) async {
     if (selectedFiles.isEmpty) return; // If no files are selected, do nothing
     if (selectedFiles.length > 1) {
       throw Exception('Only you can select a single document.');
@@ -138,6 +142,7 @@ class PdfCombinerViewModel {
       final response = await PdfCombiner.createImageFromPDF(
         inputPath: selectedFiles.first,
         outputDirPath: outputFilePath,
+        delegate: delegate,
       );
 
       if (response.status == PdfCombinerStatus.success) {
