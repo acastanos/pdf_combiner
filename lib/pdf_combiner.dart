@@ -256,7 +256,7 @@ class PdfCombiner {
 
         if (!success) {
           delegate.onError?.call(
-              Exception(PdfCombinerMessages.errorMessagePDF("inputPath")));
+              Exception(PdfCombinerMessages.errorMessagePDF(inputPath)));
         } else {
           final response = await ImagesFromPdfIsolate.createImageFromPDF(
               inputPath: inputPath,
