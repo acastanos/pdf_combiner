@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf_combiner/communication/pdf_combiner_platform_interface.dart';
 import 'package:pdf_combiner/pdf_combiner.dart';
-import 'package:pdf_combiner/responses/pdf_combiner_status.dart';
+import 'package:pdf_combiner/pdf_combiner_delegate.dart';
 
 import 'mocks/mock_pdf_combiner_platform.dart';
 import 'mocks/mock_pdf_combiner_platform_with_error.dart';
@@ -20,15 +20,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createPDFFromMultipleImages(
+      await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [],
         outputPath: 'output/path.pdf',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: The parameter (inputPaths) cannot be empty');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPath, "");
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message, 'The parameter (inputPaths) cannot be empty');
     });
 
     // Test for error handling when file not exist in the createPDFFromMultipleImages method.
@@ -40,16 +41,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createPDFFromMultipleImages(
+      await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: ['path1.jpg', 'path2.jpg'],
         outputPath: 'output/path.pdf',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: File is not an image or does not exist: path1.jpg');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPath, "");
-      expect(result.status, PdfCombinerStatus.error);
-      expect(
-          result.message, 'File is not an image or does not exist: path1.jpg');
     });
 
     // Test for error handling when you try to send a file that its not an image in createPDFFromMultipleImages
@@ -61,16 +62,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createPDFFromMultipleImages(
+      await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: ['assets/document_1.pdf', 'path2.jpg'],
         outputPath: 'output/path.pdf',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: File is not an image or does not exist: assets/document_1.pdf');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPath, "");
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message,
-          'File is not an image or does not exist: assets/document_1.pdf');
     });
 
     // Test for error handling when you try to send a file that its not an image in createPDFFromMultipleImages
@@ -83,18 +84,18 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createPDFFromMultipleImages(
+      await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [
           'example/assets/image_1.jpeg',
           'example/assets/image_2.png'
         ],
         outputPath: 'output/path.pdf',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(), 'Exception: error');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPath, "");
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message, 'error');
     });
 
     // Test for success process in createPDFFromMultipleImages
@@ -107,20 +108,18 @@ void main() {
       final outputPath = 'output/path/pdf_output.pdf';
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createPDFFromMultipleImages(
+      await pdfCombiner.createPDFFromMultipleImages(
         inputPaths: [
           'example/assets/image_1.jpeg',
           'example/assets/image_2.png'
         ],
         outputPath: outputPath,
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          expect(paths, [outputPath]);
+        }, onError: (error) {
+          fail("Test failed due to error: ${error.toString()}");
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPath, outputPath);
-      expect(result.status, PdfCombinerStatus.success);
-      expect(result.message, 'Processed successfully');
-      expect(result.toString(),
-          'PdfFromMultipleImageResponse{outputPath: ${result.outputPath}, message: ${result.message}, status: ${result.status} }');
     });
   });
 
@@ -134,18 +133,16 @@ void main() {
     final outputPath = 'output/path/pdf_output.jpeg';
 
     // Call the method and check the response.
-    final result = await pdfCombiner.createPDFFromMultipleImages(
+    await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: outputPath,
+      delegate: PdfCombinerDelegate(onSuccess: (paths) {
+        fail("Test failed due to success: $paths");
+      }, onError: (error) {
+        expect(error.toString(),
+            'Exception: The outputPath must have a .pdf format: output/path/pdf_output.jpeg');
+      }),
     );
-
-    // Verify the error result matches the expected values.
-    expect(result.status, PdfCombinerStatus.error);
-    expect(result.outputPath, "");
-    expect(result.message,
-        'The outputPath must have a .pdf format: output/path/pdf_output.jpeg');
-    expect(result.toString(),
-        'PdfFromMultipleImageResponse{outputPath: ${result.outputPath}, message: ${result.message}, status: ${result.status} }');
   });
 
   // Test for error processing when creating pdf from multiple images using PdfCombiner.
@@ -157,17 +154,15 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await pdfCombiner.createPDFFromMultipleImages(
+    await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
+      delegate: PdfCombinerDelegate(onSuccess: (paths) {
+        fail("Test failed due to success: $paths");
+      }, onError: (error) {
+        expect(error.toString(), 'Exception: Mocked Exception');
+      }),
     );
-
-    // Verify the result matches the expected mock values.
-    expect(result.status, PdfCombinerStatus.error);
-    expect(result.outputPath, "");
-    expect(result.message, 'Exception: Mocked Exception');
-    expect(result.toString(),
-        'PdfFromMultipleImageResponse{outputPath: ${result.outputPath}, message: ${result.message}, status: ${result.status} }');
   });
 
   // Test for error Mocked Exception when creating pdf from multiple images using PdfCombiner.
@@ -179,17 +174,15 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await pdfCombiner.createPDFFromMultipleImages(
+    await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
+      delegate: PdfCombinerDelegate(onSuccess: (paths) {
+        fail("Test failed due to success: $paths");
+      }, onError: (error) {
+        expect(error.toString(), 'Exception: Mocked Exception');
+      }),
     );
-
-    // Verify the result matches the expected mock values.
-    expect(result.status, PdfCombinerStatus.error);
-    expect(result.outputPath, "");
-    expect(result.message, 'Exception: Mocked Exception');
-    expect(result.toString(),
-        'PdfFromMultipleImageResponse{outputPath: ${result.outputPath}, message: ${result.message}, status: ${result.status} }');
   });
 
   // Test for error processing when creating pdf from multiple images using PdfCombiner.
@@ -201,16 +194,14 @@ void main() {
     PdfCombinerPlatform.instance = fakePlatform;
 
     // Call the method and check the response.
-    final result = await pdfCombiner.createPDFFromMultipleImages(
+    await pdfCombiner.createPDFFromMultipleImages(
       inputPaths: ['example/assets/image_1.jpeg', 'example/assets/image_2.png'],
       outputPath: 'output/path.pdf',
+      delegate: PdfCombinerDelegate(onSuccess: (paths) {
+        fail("Test failed due to success: $paths");
+      }, onError: (error) {
+        expect(error.toString(), 'Exception: error');
+      }),
     );
-
-    // Verify the result matches the expected mock values.
-    expect(result.status, PdfCombinerStatus.error);
-    expect(result.outputPath, "");
-    expect(result.message, 'error');
-    expect(result.toString(),
-        'PdfFromMultipleImageResponse{outputPath: ${result.outputPath}, message: ${result.message}, status: ${result.status} }');
   });
 }

@@ -21,6 +21,29 @@ class DocumentUtils {
     }
   }
 
+  /// Checks if all provided file paths correspond to PDF files.
+  ///
+  /// Iterates through the list of file paths and verifies whether each file
+  /// is a PDF using the [isPDF] function. If any file is not a PDF,
+  /// the function returns `false`. If an error occurs, it also returns `false`.
+  ///
+  /// - [filePaths]: A list of file paths to check.
+  /// - Returns: `true` if all files are PDFs, otherwise `false`.
+  static Future<bool> areAllPdfs(List<String> filePaths) async {
+    try {
+      bool areImages = true;
+      int index = 0;
+      while (index < filePaths.length && areImages) {
+        final filePath = filePaths[index];
+        areImages = await isPDF(filePath);
+        index ++;
+      }
+      return areImages;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Checks if the given file path has a PDF extension.
   /// Returns `true` if the file has a `.pdf` extension, otherwise `false`.
   static bool hasPDFExtension(String filePath) =>

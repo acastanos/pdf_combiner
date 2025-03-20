@@ -60,37 +60,44 @@ class PdfCombiner {
     } else {
       final List<String> mutablePaths = List.from(inputPaths);
       String dirname = path.dirname(outputPath);
-      for (int i = 0; i < mutablePaths.length; i++) {
-        final path = mutablePaths[i];
+      bool isError = false;
+      int index = 0;
+      while (index < mutablePaths.length && !isError) {
+        final path = mutablePaths[index];
         final isPDF = await DocumentUtils.isPDF(path);
         final isImage = await DocumentUtils.isImage(path);
         final outputPathIsPDF = DocumentUtils.hasPDFExtension(outputPath);
         if (!outputPathIsPDF) {
+          isError = true;
           delegate.onError?.call(Exception(
               PdfCombinerMessages.errorMessageInvalidOutputPath(outputPath)));
         } else if (!isPDF && !isImage) {
+          isError = true;
           delegate.onError
               ?.call(Exception(PdfCombinerMessages.errorMessageMixed(path)));
         } else {
           if (isImage) {
             final customDelegate = PdfCombinerDelegate(
-                onSuccess: (paths) {
-                  mutablePaths[i] = paths.first;
+                onSuccess: (paths) async {
+                  mutablePaths[index] = paths.first;
+                  if (await DocumentUtils.areAllPdfs(mutablePaths)) {
+                    await mergeMultiplePDFs(
+                      inputPaths: mutablePaths,
+                      outputPath: outputPath,
+                      delegate: delegate,
+                    );
+                  }
                 },
                 onError: delegate.onError,
                 onProgress: delegate.onProgress);
             await createPDFFromMultipleImages(
                 inputPaths: [path],
-                outputPath: "$dirname/document_$i.pdf",
+                outputPath: "$dirname/document_$index.pdf",
                 delegate: customDelegate);
           }
+          index++;
         }
       }
-      await mergeMultiplePDFs(
-        inputPaths: mutablePaths,
-        outputPath: outputPath,
-        delegate: delegate,
-      );
     }
   }
 
@@ -255,8 +262,8 @@ class PdfCombiner {
         bool success = await DocumentUtils.isPDF(inputPath);
 
         if (!success) {
-          delegate.onError?.call(
-              Exception(PdfCombinerMessages.errorMessagePDF(inputPath)));
+          delegate.onError
+              ?.call(Exception(PdfCombinerMessages.errorMessagePDF(inputPath)));
         } else {
           final response = await ImagesFromPdfIsolate.createImageFromPDF(
               inputPath: inputPath,

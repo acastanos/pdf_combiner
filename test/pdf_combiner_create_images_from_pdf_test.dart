@@ -3,7 +3,7 @@ import 'package:pdf_combiner/communication/pdf_combiner_platform_interface.dart'
 import 'package:pdf_combiner/models/image_from_pdf_config.dart';
 import 'package:pdf_combiner/models/image_scale.dart';
 import 'package:pdf_combiner/pdf_combiner.dart';
-import 'package:pdf_combiner/responses/pdf_combiner_status.dart';
+import 'package:pdf_combiner/pdf_combiner_delegate.dart';
 
 import 'mocks/mock_pdf_combiner_platform.dart';
 import 'mocks/mock_pdf_combiner_platform_with_error.dart';
@@ -21,16 +21,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'assets/test_image1.png',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: File is not of PDF type or does not exist: assets/test_image1.png');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPaths, []);
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message,
-          'File is not of PDF type or does not exist: assets/test_image1.png');
     });
 
     // Test for error handling when you try to send a file that file not exist in createImageFromPDF
@@ -41,16 +41,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'assets/test_image_not_exist.pdf',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: File is not of PDF type or does not exist: assets/test_image_not_exist.pdf');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPaths, []);
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message,
-          'File is not of PDF type or does not exist: assets/test_image_not_exist.pdf');
     });
 
     // Test for error handling when you try to send a file that its not a pdf in createImageFromPDF
@@ -61,15 +61,16 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: '',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(),
+              'Exception: The parameter (inputPath) cannot be empty');
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPaths, []);
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.message, 'The parameter (inputPath) cannot be empty');
     });
 
     // Test for error processing when combining multiple PDFs using PdfCombiner.
@@ -81,17 +82,15 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(), 'Exception: error');
+        }),
       );
-
-      // Verify the result matches the expected mock values.
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.outputPaths, []);
-      expect(result.message, 'error');
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
 
     // Test for error processing when combining multiple PDFs using PdfCombiner.
@@ -103,17 +102,15 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(), 'Exception: error');
+        }),
       );
-
-      // Verify the result matches the expected mock values.
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.outputPaths, []);
-      expect(result.message, 'error');
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
 
     // Test for error processing when combining multiple PDFs using PdfCombiner.
@@ -125,20 +122,18 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: 'output/path',
         config: ImageFromPdfConfig(
           rescale: ImageScale(width: 500, height: 200),
         ),
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(), 'Exception: Error in processing');
+        }),
       );
-
-      // Verify the result matches the expected mock values.
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.outputPaths, []);
-      expect(result.message, 'Error in processing');
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
 
     // Test for Mocked Exception creating image form PDF using PdfCombiner.
@@ -150,17 +145,15 @@ void main() {
       PdfCombinerPlatform.instance = fakePlatform;
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: 'output/path',
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          fail("Test failed due to success: $paths");
+        }, onError: (error) {
+          expect(error.toString(), 'Exception: Mocked Exception');
+        }),
       );
-
-      // Verify the result matches the expected mock values.
-      expect(result.status, PdfCombinerStatus.error);
-      expect(result.outputPaths, []);
-      expect(result.message, 'Exception: Mocked Exception');
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
 
     // Test successfully for createImageFromPDF
@@ -173,18 +166,16 @@ void main() {
       final outputDirPath = 'output/path';
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: outputDirPath,
         config: ImageFromPdfConfig(createOneImage: true),
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          expect(paths, ['$outputDirPath/image1.png']);
+        }, onError: (error) {
+          fail("Test failed due to error: ${error.toString()}");
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPaths, ['$outputDirPath/image1.png']);
-      expect(result.status, PdfCombinerStatus.success);
-      expect(result.message, null);
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
 
     // Test successfully for createImageFromPDF
@@ -197,18 +188,16 @@ void main() {
       final outputDirPath = 'output/path';
 
       // Call the method and check the response.
-      final result = await pdfCombiner.createImageFromPDF(
+      await pdfCombiner.createImageFromPDF(
         inputPath: 'example/assets/document_1.pdf',
         outputDirPath: outputDirPath,
+        delegate: PdfCombinerDelegate(onSuccess: (paths) {
+          expect(paths,
+              ['$outputDirPath/image1.png', '$outputDirPath/image2.png']);
+        }, onError: (error) {
+          fail("Test failed due to error: ${error.toString()}");
+        }),
       );
-
-      // Verify the error result matches the expected values.
-      expect(result.outputPaths,
-          ['$outputDirPath/image1.png', '$outputDirPath/image2.png']);
-      expect(result.status, PdfCombinerStatus.success);
-      expect(result.message, null);
-      expect(result.toString(),
-          'ImageFromPDFResponse{outputPaths: ${result.outputPaths}, message: ${result.message}, status: ${result.status} }');
     });
   });
 }

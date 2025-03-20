@@ -24,7 +24,7 @@ class MockPdfCombinerPlatformWithError
     required List<String> inputPaths,
     required String outputPath,
   }) {
-    return Future.value('error');
+    return Future.error('error');
   }
 
   /// Mocks the `createPDFFromMultipleImage` method.
@@ -41,7 +41,7 @@ class MockPdfCombinerPlatformWithError
     required String outputPath,
     PdfFromMultipleImageConfig config = const PdfFromMultipleImageConfig(),
   }) {
-    return Future.value('error');
+    return Future.error('error');
   }
 
   /// Mocks the `createImageFromPDF` method.
@@ -61,7 +61,7 @@ class MockPdfCombinerPlatformWithError
     ImageFromPdfConfig config = const ImageFromPdfConfig(),
   }) {
     if (config.rescale == ImageScale.original) {
-      return Future.value(['error']);
+      return Future.error('error');
     }
     return Future.value([]);
   }
